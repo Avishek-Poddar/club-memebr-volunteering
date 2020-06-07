@@ -28,7 +28,7 @@ class _PasswordPageState extends State<PasswordPage> {
   String _userName = '';
 
   int completedHours = 0;
-  int CommittedHours = 0;
+  int pendingHours = 0;
   int remainingHours = 0;
 
   _readData() async {

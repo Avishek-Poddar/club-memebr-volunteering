@@ -119,7 +119,7 @@ class _EventsPageState extends State<EventsPage> with TickerProviderStateMixin {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
-          "Events",
+          "Dashboard",
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: IconThemeData(color: Colors.white),
@@ -127,7 +127,7 @@ class _EventsPageState extends State<EventsPage> with TickerProviderStateMixin {
       ),
       bottomNavigationBar: new MyNav(1, _scaffoldKey),
       drawer: new MyDrawer(),
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFFAFBFC),
       body: Column(
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
@@ -252,7 +252,7 @@ class _EventsPageState extends State<EventsPage> with TickerProviderStateMixin {
                                   });
                         })
                       },
-                      color: Colors.white,
+                      color: Colors.lightBlueAccent,
                       child: new Text("Apply"),
                     ),
                     visible: _allEvents[eventId].status == 'red' &&

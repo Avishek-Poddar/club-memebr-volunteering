@@ -129,7 +129,7 @@ class _SignUpPageState extends State<SignUpPage> {
           });
         },
         padding: EdgeInsets.all(12),
-        color: Color.fromRGBO(3,57,99,1),
+        color: Colors.lightBlue,
         child: Text('Submit', style: TextStyle(color: Colors.white)),
       ),
     );

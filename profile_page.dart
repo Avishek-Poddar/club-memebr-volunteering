@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:Volunteer/password_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +12,7 @@ import 'models/user.dart';
 import 'my_nav.dart';
 
 class ProfilePage extends StatefulWidget {
-  static String tag = 'Profile_Page';
+  static String tag = 'profile-page';
   @override
   _ProfilePageState createState() => new _ProfilePageState();
 }
@@ -19,25 +21,33 @@ class _ProfilePageState extends State<ProfilePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  var nameTextController = new TextEditingController();
+  var addressTextController = new TextEditingController();
+  var phoneTextContoller = new TextEditingController();
+  var emailTextContoller = new TextEditingController();
+
   User _user = new User();
 
-  bool _isEdit = false;
-
-  int _userId = 0;
-  int _isAdmin = 0;
-  String _userName = '';
-
   int completedHours = 0;
-  int CommittedHours = 0;
+  int pendingHours = 0;
   int remainingHours = 0;
 
   _readData() async {
     final prefs = await SharedPreferences.getInstance();
 
-    setState(() {
-      _userId = prefs.getInt('user_id') ?? 0;
-      _isAdmin = prefs.getInt('is_admin') ?? 0;
-      _userName = prefs.getString('user_name') ?? '';
+    int uid = prefs.getInt('user_id') ?? 0;
+    print(uid);
+
+    API.getUser(uid).then((response) {
+      setState(() {
+        Map<String, dynamic> map = json.decode(response.body);
+        print(map['data']);
+        _user = User.fromJson(map['data']);
+        nameTextController.text = _user.name;
+        addressTextController.text = _user.address;
+        phoneTextContoller.text = _user.phone;
+        emailTextContoller.text = _user.email;
+      });
     });
   }
 
@@ -45,19 +55,17 @@ class _ProfilePageState extends State<ProfilePage> {
     if (this._formKey.currentState.validate()) {
       _formKey.currentState.save();
 
-      if (_isEdit) {
-        API.updateUser(_user.id, _user.toMap()).then((response) {
-          if (response.status) {
-            MyAlert.show("Success", "Profile updated successfully", "Done",
-                context: context,
-                onClickAction: () =>
-                    Navigator.of(context).pushNamed(ProfilePage.tag));
-          } else {
-            MyAlert.show("Error", response.msg, "Dismiss",
-                context: context, onClickAction: () => Navigator.pop(context));
-          }
-        });
-      } else {}
+      API.updateUser(_user.id, _user.toMap()).then((response) {
+        if (response.status) {
+          MyAlert.show("Success", "Profile updated successfully", "Done",
+              context: context,
+              onClickAction: () =>
+                  Navigator.of(context).pushNamed(ProfilePage.tag));
+        } else {
+          MyAlert.show("Error", response.msg, "Dismiss",
+              context: context, onClickAction: () => Navigator.pop(context));
+        }
+      });
     }
   }
 
@@ -75,13 +83,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
-    final User arg = ModalRoute.of(context).settings.arguments;
-
-    if (arg is User) {
-      _user = arg;
-      _isEdit = true;
-      this._user.password = '';
-    }
 
     final body = Container(
       width: MediaQuery.of(context).size.width,
@@ -97,6 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
           new Label("User Name"),
           new TextFormField(
             keyboardType: TextInputType.text,
+            controller: nameTextController,
             decoration: new InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'User Name',
@@ -110,11 +112,29 @@ class _ProfilePageState extends State<ProfilePage> {
             onSaved: (String value) {
               this._user.name = value;
             },
-            initialValue: this._user.name,
+          ),
+          new Label("User Address"),
+          new TextFormField(
+            keyboardType: TextInputType.text,
+            controller: addressTextController,
+            decoration: new InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'User Address',
+            ),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter user address';
+              }
+              return null;
+            },
+            onSaved: (String value) {
+              this._user.address = value;
+            },
           ),
           new Label("User Phone"),
           new TextFormField(
             keyboardType: TextInputType.text,
+            controller: phoneTextContoller,
             decoration: new InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'User Phone',
@@ -128,11 +148,11 @@ class _ProfilePageState extends State<ProfilePage> {
             onSaved: (String value) {
               this._user.phone = value;
             },
-            initialValue: this._user.phone,
           ),
           new Label("User Email"),
           new TextFormField(
             keyboardType: TextInputType.emailAddress,
+            controller: emailTextContoller,
             decoration: new InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'User Email',
@@ -145,28 +165,6 @@ class _ProfilePageState extends State<ProfilePage> {
             },
             onSaved: (String value) {
               this._user.email = value;
-            },
-            initialValue: this._user.email,
-          ),
-          new Label("User Password"),
-          new TextFormField(
-            keyboardType: TextInputType.emailAddress,
-            obscureText: true,
-            decoration: new InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'User Password',
-            ),
-            validator: (value) {
-              if (_isEdit) {
-                return null;
-              }
-              if (value.isEmpty) {
-                return 'Please enter user password';
-              }
-              return null;
-            },
-            onSaved: (String value) {
-              this._user.password = value;
             },
           ),
           SizedBox(height: 10.0),

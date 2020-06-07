@@ -1,50 +1,22 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'Consts.dart';
-import 'admin/home_page.dart';
-import 'forget_page.dart';
-import 'home_page.dart';
+import 'API.dart';
+import 'controls/my_alert.dart';
+import 'login_page.dart';
 import 'signup_page.dart';
 
-class LoginPage extends StatefulWidget {
-  static String tag = 'login-page';
+class ForgetPage extends StatefulWidget {
+  static String tag = 'forget-page';
   @override
-  _LoginPageState createState() => new _LoginPageState();
+  _ForgetPageState createState() => new _ForgetPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _ForgetPageState extends State<ForgetPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   bool isLoading = false;
-
-  Future<Map<String, dynamic>> loginUser({Map body}) async {
-    return http
-        .post(Consts.LOGIN_URL, body: body)
-        .then((http.Response response) {
-      final int statusCode = response.statusCode;
-      // check if server response is valid or not
-      if (statusCode < 200 || statusCode > 400) {
-        throw new Exception("Error while fetching data");
-      }
-
-      Map<String, dynamic> map = json.decode(response.body);
-      // check if user is valid or not
-      if (map['status'] == false) {
-        _showDialog(map['msg']);
-        return map;
-      }
-      // if user is valid store the user name and id in session
-      _save(map['data']['id'] as int, map['data']['name'],
-          map['data']['is_admin'] as int);
-
-      return map;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +31,6 @@ class _LoginPageState extends State<LoginPage> {
 
     final email = TextFormField(
       keyboardType: TextInputType.emailAddress,
-      autocorrect: false,
       controller: emailController,
       autofocus: false,
       decoration: InputDecoration(
@@ -87,24 +58,17 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(24),
         ),
         onPressed: () {
-          setState(() {
-            this.isLoading = true;
-          });
-          var params = new Map<String, dynamic>();
-          params["email"] = emailController.text;
-          params["password"] = passwordController.text;
-
-          loginUser(body: params).then((map) {
-            if (map['status']) {
-              if (map['data']['is_admin'] == 1) {
-                Navigator.of(context).pushNamed(AdminHomePage.tag);
-              } else {
-                Navigator.of(context).pushNamed(HomePage.tag);
-              }
+          API.forgotPassword(emailController.text).then((response) {
+            if (response.status) {
+              MyAlert.show("Success", "OTP sent to email successfully", "Done",
+                  context: context,
+                  onClickAction: () =>
+                      Navigator.of(context).pushNamed(LoginPage.tag));
+            } else {
+              MyAlert.show("Error", response.msg, "Dismiss",
+                  context: context,
+                  onClickAction: () => Navigator.pop(context));
             }
-            setState(() {
-              this.isLoading = false;
-            });
           });
         },
         padding: EdgeInsets.all(12),
@@ -113,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
             ? Center(
                 child: CircularProgressIndicator(),
               )
-            : Text('Login', style: TextStyle(color: Colors.white)),
+            : Text('Send OTP', style: TextStyle(color: Colors.white)),
       ),
     );
 
@@ -137,9 +101,7 @@ class _LoginPageState extends State<LoginPage> {
         'Forgot password?',
         style: TextStyle(color: Colors.black54),
       ),
-      onPressed: () {
-        Navigator.of(context).pushNamed(ForgetPage.tag);
-      },
+      onPressed: () {},
     );
 
     return Scaffold(
@@ -158,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                   padding: EdgeInsets.only(left: 24.0, right: 24.0),
                   children: <Widget>[
                     new Text(
-                      "Log In",
+                      "Forgot Password",
                       textAlign: TextAlign.center,
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -166,10 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(height: 20.0),
                     email,
                     SizedBox(height: 8.0),
-                    password,
-                    SizedBox(height: 24.0),
                     loginButton,
-                    forgotLabel,
                     SizedBox(height: 34.0),
                     FlatButton(
                       child: Text(

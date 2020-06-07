@@ -22,10 +22,13 @@ class _HomePageState extends State<HomePage> {
   int _isAdmin = 0;
   String _userName = '';
 
+  double completedPer = 0;
+  double pendingPer = 0;
+  double remainingPer = 0;
+
   int completedHours = 0;
   int pendingHours = 0;
   int remainingHours = 0;
-
 
   _readData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,10 +49,16 @@ class _HomePageState extends State<HomePage> {
       var hours = map['data'];
       print(hours);
       setState(() {
-        completedHours = hours['completed'] > 100 ? 100 : hours['completed'];
-        pendingHours = hours['pending'] > 100 ? 100 : hours['pending'];
-        remainingHours = hours['remaining'] > 100 ? 100 : hours['remaining'];
+        completedHours =
+            hours['completed_hours'] > 20 ? 20 : hours['completed_hours'];
+        pendingHours =
+            hours['pending_hours'] > 20 ? 20 : hours['pending_hours'];
+        remainingHours =
+            hours['remaining_hours'] > 20 ? 20 : hours['remaining_hours'];
 
+        completedPer = double.parse(hours['completed']);
+        pendingPer = double.parse(hours['pending']);
+        remainingPer = double.parse(hours['remaining']);
       });
     });
   }
@@ -71,7 +80,7 @@ class _HomePageState extends State<HomePage> {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
-          "Dashboard",
+          "Welcome",
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: IconThemeData(color: Colors.white),
@@ -88,13 +97,13 @@ class _HomePageState extends State<HomePage> {
               animation: true,
               lineHeight: 30.0,
               animationDuration: 2000,
-              percent: (completedHours / 100) > 0 ? (completedHours / 100) : 0,
-              center: Text("${completedHours} % of total hour"),
+              percent: completedPer,
+              center: Text("${completedHours} hours"),
               linearStrokeCap: LinearStrokeCap.roundAll,
               progressColor: Colors.green,
             ),
           ),
-          new Label("Committed Hours"),
+          new Label("Pending Hours"),
           Padding(
             padding: EdgeInsets.all(15.0),
             child: new LinearPercentIndicator(
@@ -102,8 +111,8 @@ class _HomePageState extends State<HomePage> {
               animation: true,
               lineHeight: 30.0,
               animationDuration: 2000,
-              percent: (pendingHours / 100) > 0 ? (pendingHours / 100) : 0,
-              center: Text("${pendingHours} % of total hour"),
+              percent: pendingPer,
+              center: Text("${pendingHours} hours"),
               linearStrokeCap: LinearStrokeCap.roundAll,
               progressColor: Colors.orange,
             ),
@@ -116,8 +125,8 @@ class _HomePageState extends State<HomePage> {
               animation: true,
               lineHeight: 30.0,
               animationDuration: 2000,
-              percent: (remainingHours / 100) > 0 ? (remainingHours / 100) : 0,
-              center: Text("${remainingHours} % of total hour"),
+              percent: remainingPer,
+              center: Text("${remainingHours} hours"),
               linearStrokeCap: LinearStrokeCap.roundAll,
               progressColor: Colors.red,
             ),
